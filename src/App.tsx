@@ -6,9 +6,11 @@ import Dashboard from './pages/Dashboard';
 import Inventory from './pages/Inventory';
 import Sales from './pages/Sales';
 import Settings from './pages/Settings';
+import SalesHistory from './pages/SalesHistory';
 import UpdatePassword from './pages/UpdatePassword';
 import Layout from './components/Layout';
 import type { Session } from '@supabase/supabase-js';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -48,28 +50,31 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route
-          path="/login"
-          element={!session ? <Login /> : <Navigate to="/" replace />}
-        />
-        <Route
-          path="/update-password"
-          element={<UpdatePassword />}
-        />
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route
+            path="/login"
+            element={!session ? <Login /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/update-password"
+            element={<UpdatePassword />}
+          />
 
-        {/* Protected Routes Wrapper */}
-        <Route element={session ? <Layout /> : <Navigate to="/login" replace />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/inventory" element={<Inventory />} />
-          <Route path="/sales" element={<Sales />} />
-          <Route path="/settings" element={<Settings />} />
-        </Route>
+          {/* Protected Routes Wrapper */}
+          <Route element={session ? <Layout /> : <Navigate to="/login" replace />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/inventory" element={<Inventory />} />
+            <Route path="/sales" element={<Sales />} />
+            <Route path="/sales-history" element={<SalesHistory />} />
+            <Route path="/settings" element={<Settings />} />
+          </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

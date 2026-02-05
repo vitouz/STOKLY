@@ -6,6 +6,7 @@ import {
     ChevronLeft,
     ChevronRight,
     LogOut,
+    Clock,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -23,6 +24,7 @@ export default function Sidebar({ isExpanded, setExpanded }: SidebarProps) {
         { id: 'dashboard', label: 'Visão Geral', icon: LayoutDashboard, path: '/' },
         { id: 'inventory', label: 'Estoque', icon: Package, path: '/inventory' },
         { id: 'sales', label: 'Vendas', icon: ShoppingCart, path: '/sales' },
+        { id: 'history', label: 'Histórico', icon: Clock, path: '/sales-history' },
         { id: 'settings', label: 'Configurações', icon: SettingsIcon, path: '/settings' },
     ];
 

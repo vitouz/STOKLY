@@ -19,6 +19,7 @@ interface Product {
     price: number;
     stock_quantity: number;
     category: string | null;
+    barcode: string | null;
 }
 
 interface CartItem extends Product {
@@ -37,6 +38,31 @@ export default function Sales() {
     useEffect(() => {
         fetchProducts();
     }, []);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // F10 to checkout
+            if (e.key === 'F10') {
+                e.preventDefault();
+                if (cart.length > 0 && !isProcessing) {
+                    checkout();
+                }
+                return;
+            }
+
+            // Numeric shortcuts for payment only if not typing in an input
+            const isInput = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
+            if (!isInput && cart.length > 0) {
+                if (e.key === '1') setPaymentMethod('money');
+                if (e.key === '2') setPaymentMethod('pix');
+                if (e.key === '3') setPaymentMethod('credit_card');
+                if (e.key === '4') setPaymentMethod('debit_card');
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [cart, isProcessing, paymentMethod]);
 
     async function fetchProducts() {
         try {
@@ -149,26 +175,44 @@ export default function Sales() {
     };
 
     const filteredProducts = products.filter(p =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase())
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.barcode && p.barcode.includes(searchTerm))
     );
 
+    const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' && searchTerm.trim() !== '') {
+            // Se houver apenas um resultado ou um match exato de código de barras, adiciona
+            if (filteredProducts.length === 1) {
+                addToCart(filteredProducts[0]);
+                setSearchTerm('');
+            } else {
+                const exactMatch = filteredProducts.find(p => p.barcode === searchTerm);
+                if (exactMatch) {
+                    addToCart(exactMatch);
+                    setSearchTerm('');
+                }
+            }
+        }
+    };
+
     return (
-        <div className="flex flex-col md:flex-row h-screen overflow-hidden bg-gray-50">
+        <div className="flex flex-col md:flex-row h-screen overflow-hidden bg-gray-50 dark:bg-[#0A0C10]">
             {/* Product Selection Area */}
-            <div className="flex-1 flex flex-col p-8 h-full border-r border-gray-100">
-                <header className="flex flex-col gap-2 mb-8">
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight italic uppercase">PDV Digital</h1>
-                    <p className="text-gray-500 font-medium text-sm">Selecione os produtos abaixo para iniciar a venda.</p>
+            <div className="flex-1 flex flex-col p-8 h-full border-r border-gray-100 dark:border-gray-800/50">
+                <header className="flex flex-col gap-2 mb-8 text-left">
+                    <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Vendas</h1>
+                    <p className="text-gray-500 dark:text-gray-400 font-medium">Selecione os produtos abaixo para iniciar a venda.</p>
                 </header>
 
                 <div className="relative mb-6">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Buscar produto por nome..."
-                        className="w-full pl-10 pr-4 py-3 bg-white border-none rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        placeholder="Buscar por nome ou código de barras..."
+                        className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800/50 dark:text-white border-none rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyDown={handleSearchKeyDown}
                     />
                 </div>
 
@@ -176,7 +220,7 @@ export default function Sales() {
                     {loading ? (
                         <div className="flex justify-center mt-12"><Loader2 className="h-10 w-10 text-blue-600 animate-spin" /></div>
                     ) : filteredProducts.length === 0 ? (
-                        <div className="text-center mt-12 text-gray-500">
+                        <div className="text-center mt-12 text-gray-500 dark:text-gray-400">
                             <Package className="h-12 w-12 mx-auto mb-4 opacity-20" />
                             Nenhum produto disponível
                         </div>
@@ -186,17 +230,24 @@ export default function Sales() {
                                 <button
                                     key={product.id}
                                     onClick={() => addToCart(product)}
-                                    className="bg-white p-4 rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all text-left flex flex-col justify-between h-40 group border border-transparent hover:border-blue-100"
+                                    className="bg-white dark:bg-gray-800/50 p-4 rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all text-left flex flex-col justify-between h-44 group border border-transparent hover:border-blue-100 dark:hover:border-blue-900/30"
                                 >
                                     <div>
-                                        <span className="text-xs font-bold text-blue-600 uppercase tracking-wider bg-blue-50 px-2 py-1 rounded-md">
-                                            {product.category || 'Geral'}
-                                        </span>
-                                        <h3 className="font-bold text-gray-900 mt-2 line-clamp-2">{product.name}</h3>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-md">
+                                                {product.category || 'Geral'}
+                                            </span>
+                                            {product.barcode && (
+                                                <span className="text-[10px] font-mono text-gray-400">
+                                                    {product.barcode}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <h3 className="font-bold text-gray-900 dark:text-white line-clamp-2">{product.name}</h3>
                                     </div>
                                     <div className="flex justify-between items-end">
-                                        <span className="text-lg font-black text-gray-900">R$ {product.price.toFixed(2)}</span>
-                                        <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span className="text-lg font-black text-gray-900 dark:text-white">R$ {product.price.toFixed(2)}</span>
+                                        <div className="h-8 w-8 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
                                             <Plus className="h-5 w-5" />
                                         </div>
                                     </div>
@@ -208,36 +259,36 @@ export default function Sales() {
             </div>
 
             {/* Cart Area */}
-            <div className="w-full md:w-96 bg-white flex flex-col shadow-2xl relative z-10">
-                <div className="p-6 border-b border-gray-100 flex items-center gap-3">
+            <div className="w-full md:w-96 bg-white dark:bg-gray-800/50 flex flex-col shadow-2xl relative z-10 border-l border-gray-100 dark:border-gray-700/50">
+                <div className="p-6 border-b border-gray-100 dark:border-gray-700/50 flex items-center gap-3">
                     <div className="bg-blue-600 p-2 rounded-xl text-white">
                         <ShoppingCart className="h-5 w-5" />
                     </div>
-                    <h2 className="text-xl font-bold text-gray-900">Carrinho</h2>
-                    <span className="ml-auto bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm font-bold">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Carrinho</h2>
+                    <span className="ml-auto bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1 rounded-full text-sm font-bold">
                         {cart.reduce((a, b) => a + b.quantity, 0)} itens
                     </span>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
                     {cart.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-gray-400 opacity-50">
+                        <div className="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-500 opacity-50">
                             <ShoppingCart className="h-16 w-16 mb-4" />
                             <p className="font-medium">O carrinho está vazio</p>
                         </div>
                     ) : (
                         cart.map(item => (
                             <div key={item.id} className="flex gap-4 items-center animate-in slide-in-from-right-4">
-                                <div className="flex-1">
-                                    <h4 className="font-bold text-gray-900 text-sm">{item.name}</h4>
-                                    <div className="text-blue-600 font-bold text-sm">R$ {(item.price * item.quantity).toFixed(2)}</div>
+                                <div className="flex-1 text-left">
+                                    <h4 className="font-bold text-gray-900 dark:text-white text-sm">{item.name}</h4>
+                                    <div className="text-blue-600 dark:text-blue-400 font-bold text-sm">R$ {(item.price * item.quantity).toFixed(2)}</div>
                                 </div>
-                                <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-1 px-2 border border-gray-100">
-                                    <button onClick={() => updateQuantity(item.id, -1)} className="p-1 hover:bg-white rounded-md text-gray-500 transition-colors">
+                                <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl p-1 px-2 border border-gray-100 dark:border-gray-700/50">
+                                    <button onClick={() => updateQuantity(item.id, -1)} className="p-1 hover:bg-white dark:hover:bg-gray-700 rounded-md text-gray-500 transition-colors">
                                         <Minus className="h-3 w-3" />
                                     </button>
-                                    <span className="text-sm font-black w-4 text-center">{item.quantity}</span>
-                                    <button onClick={() => updateQuantity(item.id, 1)} className="p-1 hover:bg-white rounded-md text-gray-500 transition-colors">
+                                    <span className="text-sm font-black w-4 text-center dark:text-white">{item.quantity}</span>
+                                    <button onClick={() => updateQuantity(item.id, 1)} className="p-1 hover:bg-white dark:hover:bg-gray-700 rounded-md text-gray-500 transition-colors">
                                         <Plus className="h-3 w-3" />
                                     </button>
                                 </div>
@@ -253,37 +304,38 @@ export default function Sales() {
                 </div>
 
                 {/* Footer / Total */}
-                <div className="p-6 bg-gray-50 border-t border-gray-200 space-y-6">
+                <div className="p-6 bg-gray-50 dark:bg-gray-900/30 border-t border-gray-200 dark:border-gray-700/50 space-y-6">
                     {/* Payment Method Selection */}
-                    <div className="space-y-3">
+                    <div className="space-y-3 text-left">
                         <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Forma de Pagamento</label>
                         <div className="grid grid-cols-2 gap-2">
                             {[
-                                { id: 'money', label: 'Dinheiro' },
-                                { id: 'pix', label: 'PIX' },
-                                { id: 'credit_card', label: 'Crédito' },
-                                { id: 'debit_card', label: 'Débito' }
+                                { id: 'money', label: 'Dinheiro', key: '1' },
+                                { id: 'pix', label: 'PIX', key: '2' },
+                                { id: 'credit_card', label: 'Crédito', key: '3' },
+                                { id: 'debit_card', label: 'Débito', key: '4' }
                             ].map((method) => (
                                 <button
                                     key={method.id}
                                     onClick={() => setPaymentMethod(method.id as any)}
-                                    className={`py-2 px-3 rounded-xl text-sm font-bold border-2 transition-all ${paymentMethod === method.id
-                                        ? 'border-blue-600 bg-blue-50 text-blue-600'
-                                        : 'border-gray-100 bg-white text-gray-500 hover:border-gray-200'
+                                    className={`py-2 px-3 rounded-xl text-xs font-bold border-2 transition-all flex flex-col items-center gap-1 ${paymentMethod === method.id
+                                        ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                                        : 'border-gray-100 dark:border-gray-700/50 bg-white dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 hover:border-gray-200 dark:hover:border-gray-600'
                                         }`}
                                 >
-                                    {method.label}
+                                    <span className="opacity-50">[{method.key}]</span>
+                                    <span>{method.label}</span>
                                 </button>
                             ))}
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <div className="flex justify-between text-gray-500 text-sm">
+                    <div className="space-y-2 text-left">
+                        <div className="flex justify-between text-gray-500 dark:text-gray-400 text-sm">
                             <span>Subtotal</span>
                             <span>R$ {total.toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between text-gray-900 font-black text-2xl pt-2">
+                        <div className="flex justify-between text-gray-900 dark:text-white font-black text-2xl pt-2">
                             <span>Total</span>
                             <span>R$ {total.toFixed(2)}</span>
                         </div>
@@ -298,8 +350,8 @@ export default function Sales() {
                             onClick={checkout}
                             disabled={cart.length === 0 || isProcessing}
                             className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all ${cart.length === 0 || isProcessing
-                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                : 'bg-blue-600 text-white hover:bg-blue-700 shadow-xl shadow-blue-500/20 active:scale-95'
+                                ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                                : 'bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 shadow-xl shadow-blue-500/20 active:scale-95'
                                 }`}
                         >
                             {isProcessing ? (
