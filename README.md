@@ -1,73 +1,49 @@
-# React + TypeScript + Vite
+# 📦 Stokly - Sistema de PDV
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Olá! Este é o **Stokly**, um sistema de Ponto de Venda (PDV) focado em ser simples, rápido e visualmente agradável. Ele foi criado para facilitar o gerenciamento de inventário, vendas e pagamentos de uma forma intuitiva.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Como rodar o projeto?
 
-## React Compiler
+Se você acabou de baixar o código e quer ver o app funcionando na sua máquina, segue o passo a passo (é bem tranquilo):
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. **Abra o terminal** na pasta do projeto.
+2. **Instale as dependências**:
+   ```bash
+   npm install
+   ```
+   *Isso vai baixar tudo que o projeto precisa para rodar.*
+3. **Inicie o servidor de desenvolvimento**:
+   ```bash
+   npm run dev
+   ```
+4. **Acesse no navegador**:
+   O terminal vai te dar um link (geralmente `http://localhost:5173`). É só clicar e aproveitar!
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## ✨ O que o Stokly faz?
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+*   **Vendas Rápidas**: Interface pensada para agilizar o atendimento, com busca por código de barras e atalhos de teclado.
+*   **Controle de Estoque**: Gerencie seus produtos, preços e quantidades sem complicação.
+*   **Paineis Visuais**: Acompanhe o desempenho das suas vendas com gráficos simples de entender.
+*   **Modo Escuro**: Porque ninguém merece forçar a vista o dia todo, né? 😎
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🛠️ Tecnologias utilizadas
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Para deixar o sistema robusto e moderno, usei:
+- **React + TypeScript** (Base do projeto)
+- **Vite** (Para ser tudo muito rápido)
+- **Tailwind CSS** (Estilização moderna e customizada)
+- **Supabase** (Banco de dados e autenticação)
+- **Lucide React** (Ícones bonitos e leves)
+- **Recharts** (Gráficos)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+> [!NOTE]
+> Este projeto está em constante evolução. Sinta-se à vontade para explorar e sugerir melhorias!
+

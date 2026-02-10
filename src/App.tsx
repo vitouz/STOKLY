@@ -17,11 +17,35 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session) {
+        const lastLogin = localStorage.getItem('stokly_last_login');
+        if (lastLogin) {
+          const hoursSinceLogin = (Date.now() - parseInt(lastLogin)) / (1000 * 60 * 60);
+          if (hoursSinceLogin >= 24) {
+            // Sessão expirada (mais de 24h)
+            localStorage.removeItem('stokly_last_login');
+            await supabase.auth.signOut();
+            setSession(null);
+            setLoading(false);
+            return;
+          }
+        } else {
+          // Se não tiver o registro do horário, assume que precisa logar de novo por segurança
+          await supabase.auth.signOut();
+          setSession(null);
+          setLoading(false);
+          return;
+        }
+      }
+
       setSession(session);
-    }).finally(() => {
       setLoading(false);
-    });
+    };
+
+    checkSession();
 
     const {
       data: { subscription },
